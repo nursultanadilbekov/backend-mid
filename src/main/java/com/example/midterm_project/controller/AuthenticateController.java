@@ -17,9 +17,11 @@ public class AuthenticateController {
     private final AuthenticateService authenticateService;
     @PostMapping("/register")
     public void register(@RequestBody UserAuthRequest userAuthRequest){
+        authenticateService.register(userAuthRequest);
       }
 
     @PostMapping("/login")
     public UserAuthResponse userAuthRequest(@RequestBody UserAuthRequest userAuthRequest){
+        return authenticateService.login(userAuthRequest);
     }
 }

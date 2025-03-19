@@ -1,4 +1,4 @@
-package com.example.repair_station.entities;
+package com.example.midterm_project.entities;
 
 import com.example.midterm_project.enums.Type;
 import jakarta.persistence.*;

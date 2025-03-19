@@ -1,5 +1,7 @@
 package com.example.midterm_project.service.interfaces;
 
+import com.example.midterm_project.dto.user.UserAuthRequest;
+import com.example.midterm_project.dto.user.UserAuthResponse;
 import com.example.midterm_project.dto.user.UserRequest;
 import com.example.midterm_project.dto.user.UserResponse;
 import com.example.midterm_project.entities.User;

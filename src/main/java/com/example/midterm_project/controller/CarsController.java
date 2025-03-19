@@ -9,6 +9,7 @@ import com.example.midterm_project.service.interfaces.CarsService;
 import lombok.AllArgsConstructor;
 import org.springframework.data.jpa.repository.support.SimpleJpaRepository;
 import org.springframework.web.bind.annotation.*;
+import com.example.midterm_project.mapper.interfaces.CarsMapper;
 
 import java.util.List;
 import java.util.Optional;
@@ -18,6 +19,7 @@ import java.util.Optional;
 @RequestMapping("/car")
 public class CarsController {
     private final CarsService carsService;
+    private final CarsMapper carsMapper;
     private final RepairerRepository repairerRepository;
 
     @PostMapping("/add")
@@ -56,8 +58,9 @@ public class CarsController {
     }
 
     @GetMapping("/repairerCars/{repairerId}")
-    public List<CarsResponse>repairerCars(@PathVariable Long repairerId) {
+    public List<CarsResponse>repairerCars(@PathVariable Long repairerId){
         Optional<Repairer> repairer = repairerRepository.findById(repairerId);
-        return List.of();
+
+        return carsMapper.toDtos(repairer.get().getRepairercars());
     }
 }
