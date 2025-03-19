@@ -15,7 +15,7 @@ public class CarsMapperImpl implements CarsMapper {
     public CarsResponse toDto(Car car){
         CarsResponse carsResponse=new CarsResponse();
         carsResponse.setId(car.getId());
-        carsResponse.setModel(car.getModel().name());
+        carsResponse.setModel(car.getModel());
         carsResponse.setAge(car.getAge());
         carsResponse.setNumber(car.getNumber());
 

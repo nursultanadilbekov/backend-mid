@@ -17,7 +17,7 @@ public class Car {
     private int age;
     private String number;
     @Enumerated(EnumType.STRING)
-    private Type model;
+    private String model;
 
     @ManyToOne
     Repairer repairer;

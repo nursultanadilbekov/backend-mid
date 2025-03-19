@@ -28,70 +28,60 @@ public class AuthenticateControllerTest {
     private AuthenticateService authenticateService;
 
     @Autowired
-    private ObjectMapper objectMapper; // For JSON serialization/deserialization
+    private ObjectMapper objectMapper;
 
     @Test
     void shouldRegisterUserSuccessfully() throws Exception {
-        // Arrange
         UserAuthRequest request = new UserAuthRequest();
         request.setEmail("test@example.com");
         request.setPassword("password123");
         request.setRole("USER");
 
-        // Mock the service call to do nothing (void method)
         doNothing().when(authenticateService).register(any(UserAuthRequest.class));
 
-        // Act & Assert
         mockMvc.perform(MockMvcRequestBuilders.post("/auth/register")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isOk()) // Expect 200 OK since no response body is returned
-                .andExpect(content().string("")); // No content expected
+                .andExpect(status().isOk())
+                .andExpect(content().string(""));
     }
 
     @Test
     void shouldLoginUserSuccessfully() throws Exception {
-        // Arrange
         UserAuthRequest request = new UserAuthRequest();
         request.setEmail("test@example.com");
         request.setPassword("password123");
         request.setRole("USER");
 
         UserAuthResponse response = new UserAuthResponse();
-        response.setToken("mock-jwt-token"); // Assuming UserAuthResponse has a token field
+        response.setToken("mock-jwt-token");
 
-        // Mock the service call to return a response
         when(authenticateService.login(any(UserAuthRequest.class))).thenReturn(response);
 
-        // Act & Assert
         mockMvc.perform(MockMvcRequestBuilders.post("/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isOk()) // Expect 200 OK
-                .andExpect(content().json(objectMapper.writeValueAsString(response))); // Expect JSON response
+                .andExpect(status().isOk())
+                .andExpect(content().json(objectMapper.writeValueAsString(response)));
     }
 
     @Test
     void shouldReturnBadRequestForInvalidRegisterRequest() throws Exception {
-        // Arrange: Empty request to simulate invalid input
-        UserAuthRequest request = new UserAuthRequest(); // No email, password, or role
+        UserAuthRequest request = new UserAuthRequest();
 
-        // Act & Assert
         mockMvc.perform(MockMvcRequestBuilders.post("/auth/register")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isBadRequest()); // Expect 400 if validation is present
+                .andExpect(status().isBadRequest());
     }
 
     @Test
     void shouldReturnBadRequestForInvalidLoginRequest() throws Exception {
-        // Arrange: Empty request to simulate invalid input
-        UserAuthRequest request = new UserAuthRequest(); // No email, password, or role
+        UserAuthRequest request = new UserAuthRequest();
 
-        // Act & Assert
         mockMvc.perform(MockMvcRequestBuilders.post("/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isBadRequest()); // Expect 400 if validation is present
+                .andExpect(status().isBadRequest());
     }
 }
