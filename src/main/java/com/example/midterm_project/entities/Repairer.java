@@ -25,7 +25,7 @@ public class Repairer {
     private String experience;
 
     @OneToMany(cascade = CascadeType.ALL)
-    List<com.example.repair_station.entities.Car> repairercars;
+    List<com.example.midterm_project.entities.Car> repairercars;
 
     @OneToOne(mappedBy = "repairer")
     User user;

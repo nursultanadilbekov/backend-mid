@@ -18,7 +18,7 @@ public class Customer {
     private String name;
 
     @OneToMany()
-    List<com.example.repair_station.entities.Car> cars;
+    List<com.example.midterm_project.entities.Car> cars;
 
     @OneToOne(mappedBy = "customer")
     User user;

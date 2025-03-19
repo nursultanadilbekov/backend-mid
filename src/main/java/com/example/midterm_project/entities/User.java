@@ -32,10 +32,10 @@ public class User implements UserDetails {
 
 
     @OneToOne(cascade = CascadeType.ALL)
-    private com.example.repair_station.entities.Repairer repairer;
+    private com.example.midterm_project.entities.Repairer repairer;
 
     @OneToOne(cascade = CascadeType.ALL)
-    private com.example.repair_station.entities.Customer customer;
+    private com.example.midterm_project.entities.Customer customer;
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
