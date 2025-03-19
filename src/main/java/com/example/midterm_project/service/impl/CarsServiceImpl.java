@@ -40,7 +40,7 @@ public class CarsServiceImpl implements CarsService {
             throw new BadCredentialsException("this function only for admin!");
 
         Car car=new Car();
-        car.setModel(String.valueOf(Type.valueOf(carsRequest.getModel())));
+        car.setModel(Type.valueOf(carsRequest.getModel()));
         car.setAge(carsRequest.getAge());
         car.setNumber(carsRequest.getNumber());
 
@@ -63,7 +63,7 @@ public class CarsServiceImpl implements CarsService {
         if(car.isEmpty()){
             System.out.println("car by id: "+id+" is empty");
         }else{
-            car.get().setModel(carsRequest.getModel());
+            car.get().setModel(Type.valueOf(carsRequest.getModel()));
             car.get().setAge(carsRequest.getAge());
             car.get().setNumber(carsRequest.getNumber());
 
@@ -90,7 +90,7 @@ public class CarsServiceImpl implements CarsService {
     @Override
     public void register(CarsRequest carsRequest, Long repairerId){
         Car car=new Car();
-        car.setModel(carsRequest.getModel());
+        car.setModel(Type.valueOf(carsRequest.getModel()));
         car.setAge(carsRequest.getAge());
         car.setNumber(carsRequest.getNumber());
 

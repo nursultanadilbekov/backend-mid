@@ -4,6 +4,7 @@ import com.example.midterm_project.dto.cars.CarsRequest;
 import com.example.midterm_project.dto.cars.CarsResponse;
 import com.example.midterm_project.entities.Car;
 import com.example.midterm_project.entities.Repairer;
+import com.example.midterm_project.enums.Type;
 import com.example.midterm_project.mapper.interfaces.CarsMapper;
 import com.example.midterm_project.repositories.RepairerRepository;
 import com.example.midterm_project.service.interfaces.CarsService;
@@ -163,7 +164,7 @@ public class CarsControllerTest {
         repairer.setId(repairerId);
         Car car = new Car();
         car.setId(1L);
-        car.setModel("Camry");
+        car.setModel(Type.valueOf("Camry"));
         car.setAge(5);
         car.setNumber("ABC123");
         repairer.setRepairercars(Arrays.asList(car));
