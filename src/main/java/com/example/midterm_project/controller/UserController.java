@@ -15,21 +15,21 @@ public class UserController {
     private final UserService userService;
 
 
-
     @GetMapping("/{id}")
-    public UserResponse getById(@PathVariable Long id, @RequestHeader("Authorization") String token){
+    public UserResponse getById(@PathVariable Long id, @RequestHeader("Authorization") String token) {
         return userService.getById(id, token);
     }
 
     @DeleteMapping("/{id}")
-    public void deleteUser(@PathVariable Long id){
+    public void deleteUser(@PathVariable Long id) {
         userService.deleteById(id);
     }
 
     @PutMapping("/update/{id}")
-    public void updateUser(@PathVariable Long id, @RequestBody UserRequest userRequest){
+    public void updateUser(@PathVariable Long id, @RequestBody UserRequest userRequest) {
         userService.updateById(id, userRequest);
     }
+
     @GetMapping("/getAll")
     public List<UserResponse> users() {
         return userService.getAll();

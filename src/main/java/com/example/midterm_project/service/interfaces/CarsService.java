@@ -6,7 +6,7 @@ import java.util.List;
 
 public interface CarsService {
 
-    void add(CarsRequest carsRequest, String token);
+    void add(CarsRequest carsRequest);
 
     void delete(Long id);
 

@@ -9,7 +9,4 @@ import java.util.Optional;
 public interface CarsRepository extends JpaRepository<Car,Long> {
 
     Optional<Car> findByNumber(String tra);
-
-    List<Car> findAllByExistAndAgeAccessGreaterThan(Boolean b, Integer integer);
-    List<Car> findAllByExistAndAgeAccessLessThan(Boolean b, Integer integer);
 }

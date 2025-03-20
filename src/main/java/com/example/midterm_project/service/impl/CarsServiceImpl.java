@@ -32,12 +32,12 @@ public class CarsServiceImpl implements CarsService {
     private final AuthenticateService authenticateService;
 
     @Override
-    public void add(CarsRequest carsRequest, String token){
+    public void add(CarsRequest carsRequest){
         if (carsRepository.findByNumber(carsRequest.getNumber()).isPresent())
             throw new NotFoundException("book with this transcript is already exist!: "+carsRequest.getNumber(),
                     HttpStatus.BAD_REQUEST);
-        if (!authenticateService.getUsernameFromToken(token).getRole().equals(Role.ADMIN))
-            throw new BadCredentialsException("this function only for admin!");
+//        if (!authenticateService.getUsernameFromToken(token).getRole().equals(Role.ADMIN))
+//            throw new BadCredentialsException("this function only for admin!");
 
         Car car=new Car();
         car.setModel(Type.valueOf(carsRequest.getModel()));

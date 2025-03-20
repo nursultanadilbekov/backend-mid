@@ -47,12 +47,12 @@ public class CarsControllerTest {
     @Test
     void shouldAddCarSuccessfully() throws Exception {
         CarsRequest request = new CarsRequest();
-        request.setModel("Camry");
+        request.setModel("BMW");
         request.setAge(5);
         request.setNumber("ABC123");
         String token = "Bearer mock-token";
 
-        doNothing().when(carsService).add(any(CarsRequest.class), eq(token));
+        doNothing().when(carsService).add(any(CarsRequest.class));
 
         mockMvc.perform(post("/car/add")
                         .header("Authorization", token)
@@ -77,7 +77,7 @@ public class CarsControllerTest {
     void shouldUpdateCarSuccessfully() throws Exception {
         Long id = 1L;
         CarsRequest request = new CarsRequest();
-        request.setModel("Civic");
+        request.setModel("MAZDA");
         request.setAge(3);
         request.setNumber("XYZ789");
 
@@ -96,7 +96,7 @@ public class CarsControllerTest {
         Long id = 1L;
         CarsResponse response = new CarsResponse();
         response.setId(id);
-        response.setModel("Camry");
+        response.setModel("BMW");
         response.setAge(5);
         response.setNumber("ABC123");
 
@@ -111,12 +111,12 @@ public class CarsControllerTest {
     void shouldGetAllCars() throws Exception {
         CarsResponse car1 = new CarsResponse();
         car1.setId(1L);
-        car1.setModel("Camry");
+        car1.setModel("BMW");
         car1.setAge(5);
         car1.setNumber("ABC123");
         CarsResponse car2 = new CarsResponse();
         car2.setId(2L);
-        car2.setModel("Civic");
+        car2.setModel("MAZDA");
         car2.setAge(3);
         car2.setNumber("XYZ789");
         List<CarsResponse> cars = Arrays.asList(car1, car2);
@@ -132,7 +132,7 @@ public class CarsControllerTest {
     void shouldRegisterCarSuccessfully() throws Exception {
         Long repairerId = 1L;
         CarsRequest request = new CarsRequest();
-        request.setModel("X5");
+        request.setModel("BIKE");
         request.setAge(2);
         request.setNumber("DEF456");
 
@@ -164,14 +164,14 @@ public class CarsControllerTest {
         repairer.setId(repairerId);
         Car car = new Car();
         car.setId(1L);
-        car.setModel(Type.valueOf("Camry"));
+        car.setModel(Type.BMW);
         car.setAge(5);
         car.setNumber("ABC123");
         repairer.setRepairercars(Arrays.asList(car));
 
         CarsResponse response = new CarsResponse();
         response.setId(1L);
-        response.setModel("Camry");
+        response.setModel("BMW");
         response.setAge(5);
         response.setNumber("ABC123");
         List<CarsResponse> responses = Arrays.asList(response);

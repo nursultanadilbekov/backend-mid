@@ -2,8 +2,6 @@ package com.example.midterm_project.controller;
 
 import com.example.midterm_project.dto.customer.CustomerRequest;
 import com.example.midterm_project.dto.customer.CustomerResponse;
-import com.example.midterm_project.dto.repairer.RepairerRequest;
-import com.example.midterm_project.dto.repairer.RepairerResponse;
 import com.example.midterm_project.service.interfaces.CustomerService;
 import lombok.AllArgsConstructor;
 import org.springframework.web.bind.annotation.*;
@@ -18,8 +16,8 @@ public class CustomerController {
 
 
     @GetMapping("/find/{id}")
-    public CustomerResponse find(@PathVariable Long id, @RequestHeader("Authorization") String token){
-        return customerService.find(id,token);
+    public CustomerResponse find(@PathVariable Long id, @RequestHeader("Authorization") String token) {
+        return customerService.find(id, token);
     }
 
     @DeleteMapping("/delete")
@@ -28,12 +26,12 @@ public class CustomerController {
     }
 
     @GetMapping("/getAll")
-    public List<CustomerResponse> customerResponses(){
+    public List<CustomerResponse> customerResponses() {
         return customerService.getAll();
     }
 
     @PostMapping("/update")
-    public void update(@PathVariable Long id, @RequestBody CustomerRequest customerRequest){
-        customerService.update(id,customerRequest);
+    public void update(@PathVariable Long id, @RequestBody CustomerRequest customerRequest) {
+        customerService.update(id, customerRequest);
     }
 }
