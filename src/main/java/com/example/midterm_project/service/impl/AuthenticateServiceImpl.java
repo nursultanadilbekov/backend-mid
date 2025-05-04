@@ -63,7 +63,6 @@ public class AuthenticateServiceImpl implements AuthenticateService {
             customerRepository.save(customer);
 
             user.setCustomer(customer);
-            userRepository.save(user);
         }
 
         userRepository.save(user);
@@ -72,14 +71,30 @@ public class AuthenticateServiceImpl implements AuthenticateService {
     @Override
     public UserAuthResponse login(UserAuthRequest userAuthRequest) {
         try {
-            authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(
-                    userAuthRequest.getEmail(),
-                    userAuthRequest.getPassword()));
-        } catch (BadCredentialsException e){
-            throw new BadCredentialsException("...");
+            authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(
+                            userAuthRequest.getEmail(),
+                            userAuthRequest.getPassword()
+                    )
+            );
+        } catch (BadCredentialsException e) {
+            throw new BadCredentialsException("Invalid credentials provided.");
         }
-        User user = userRepository.findByEmail(userAuthRequest.getEmail()).orElseThrow();
-        return convertToAuthResponse(user);
+
+        User user = userRepository.findByEmail(userAuthRequest.getEmail())
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        Map<String, Object> extraClaims = new HashMap<>();
+        String accessToken = jwtService.generateToken(extraClaims, user);
+        String refreshToken = jwtService.generateRefreshToken(user);
+
+        UserAuthResponse response = new UserAuthResponse();
+        response.setToken(accessToken);
+        response.setRefreshToken(refreshToken);
+        response.setEmail(user.getEmail());
+        response.setRole(user.getRole().name());
+
+        return response;
     }
 
     @Override
@@ -98,18 +113,17 @@ public class AuthenticateServiceImpl implements AuthenticateService {
         return userRepository.findByEmail(String.valueOf(object.get("sub"))).orElseThrow(() -> new RuntimeException("user can be null"));
     }
 
-
-
     private UserAuthResponse convertToAuthResponse(User user) {
         UserAuthResponse userAuthResponse = new UserAuthResponse();
         userAuthResponse.setEmail(user.getEmail());
         userAuthResponse.setRole(user.getRole().name());
+
         Map<String, Object> extraClaims = new HashMap<>();
+        String accessToken = jwtService.generateToken(extraClaims, user);
+        String refreshToken = jwtService.generateRefreshToken(user);  // Add refresh token
 
-        String token = jwtService.generateToken(extraClaims, user);
-        System.out.println("Generated Token: " + token);
-
-        userAuthResponse.setToken(token);
+        userAuthResponse.setToken(accessToken);
+        userAuthResponse.setRefreshToken(refreshToken);  // Set refresh token
         return userAuthResponse;
     }
 }

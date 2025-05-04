@@ -7,6 +7,7 @@ import lombok.Setter;
 @Setter
 public class UserAuthResponse {
     private String email;
-    private String token;
     private String role;
+    private String token;  // Access token
+    private String refreshToken;  // Refresh token
 }

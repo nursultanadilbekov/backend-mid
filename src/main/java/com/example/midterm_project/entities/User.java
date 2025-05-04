@@ -37,6 +37,12 @@ public class User implements UserDetails {
     @OneToOne(cascade = CascadeType.ALL)
     private com.example.midterm_project.entities.Customer customer;
 
+    private boolean emailVerified = false;
+
+    private boolean twoFactorEnabled = false;
+
+    private String twoFactorSecret;
+
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         if (role == null) {
