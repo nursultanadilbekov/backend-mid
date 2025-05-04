@@ -12,4 +12,6 @@ public interface AuthenticateService {
     UserAuthResponse login(UserAuthRequest userAuthRequest);
 
     User getUsernameFromToken(String token);
+
+    UserAuthResponse refreshToken(String refreshToken);
 }

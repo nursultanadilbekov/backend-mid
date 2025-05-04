@@ -98,6 +98,30 @@ public class AuthenticateServiceImpl implements AuthenticateService {
     }
 
     @Override
+    public UserAuthResponse refreshToken(String refreshToken) {
+        String email = jwtService.extractUsername(refreshToken);
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        if (!jwtService.isTokenValid(refreshToken, user)) {
+            throw new RuntimeException("Refresh token is invalid or expired.");
+        }
+
+        Map<String, Object> extraClaims = new HashMap<>();
+        String newAccessToken = jwtService.generateToken(extraClaims, user);
+        String newRefreshToken = jwtService.generateRefreshToken(user);
+
+        UserAuthResponse response = new UserAuthResponse();
+        response.setToken(newAccessToken);
+        response.setRefreshToken(newRefreshToken);
+        response.setEmail(user.getEmail());
+        response.setRole(user.getRole().name());
+
+        return response;
+    }
+
+
+    @Override
     public User getUsernameFromToken(String token){
 
         String[] chunks = token.substring(7).split("\\.");
