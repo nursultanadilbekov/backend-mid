@@ -8,5 +8,7 @@ import lombok.Setter;
 public class UserAuthRequest {
     private String email;
     private String password;
+    private String name;
+    private Integer age;
     private String role;
 }

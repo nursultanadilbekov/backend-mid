@@ -1,6 +1,5 @@
 package com.example.midterm_project.entities;
 
-
 import com.example.midterm_project.enums.Role;
 import jakarta.persistence.*;
 import lombok.Getter;
@@ -11,7 +10,6 @@ import org.springframework.security.core.userdetails.UserDetails;
 
 import java.util.Collection;
 import java.util.Collections;
-import java.util.List;
 
 @Entity
 @Getter
@@ -22,41 +20,29 @@ public class User implements UserDetails {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
+
     private String email;
     private String name;
     private Integer age;
-
     private String password;
+
     @Enumerated(EnumType.STRING)
     private Role role;
 
+    @OneToOne(cascade = CascadeType.ALL)
+    private Repairer repairer;
 
     @OneToOne(cascade = CascadeType.ALL)
-    private com.example.midterm_project.entities.Repairer repairer;
-
-    @OneToOne(cascade = CascadeType.ALL)
-    private com.example.midterm_project.entities.Customer customer;
+    private Customer customer;
 
     private boolean emailVerified = false;
-
     private boolean twoFactorEnabled = false;
-
     private String twoFactorSecret;
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        if (role == null) {
-            return Collections.singletonList(new SimpleGrantedAuthority("ROLE_DEFAULT"));
-        }
-        List<GrantedAuthority> authorities = Collections.singletonList(new SimpleGrantedAuthority("ROLE_" + role.name()));
-        return authorities;
-    }
-
-
-
-    @Override
-    public String getPassword() {
-        return password;
+        String roleName = (role != null) ? "ROLE_" + role.name() : "ROLE_DEFAULT";
+        return Collections.singletonList(new SimpleGrantedAuthority(roleName));
     }
 
     @Override

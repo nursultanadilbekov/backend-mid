@@ -13,9 +13,6 @@ import com.example.midterm_project.mapper.interfaces.UserMapper;
 import com.example.midterm_project.repositories.UserRepository;
 import com.example.midterm_project.service.interfaces.UserService;
 
-import net.minidev.json.JSONObject;
-import net.minidev.json.parser.JSONParser;
-import net.minidev.json.parser.ParseException;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -23,7 +20,8 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import java.util.*;
+import java.util.List;
+import java.util.Optional;
 
 @Service
 @AllArgsConstructor
@@ -37,33 +35,24 @@ public class UserServiceImpl implements UserService {
     @Override
     public UserResponse getById(Long id, String token) {
         User actionUser = getUsernameFromToken(token);
-        System.out.println(actionUser.getEmail());
-
         Optional<User> user = userRepository.findById(id);
         if (user.isEmpty())
-            throw new NotFoundException("user not found with id:"+id+"!", HttpStatus.BAD_REQUEST);
+            throw new NotFoundException("user not found with id:" + id + "!", HttpStatus.BAD_REQUEST);
         return userMapper.toDto(user.get());
     }
+
     @Override
     public User getUsernameFromToken(String token) {
-
         String[] chunks = token.substring(7).split("\\.");
-        Base64.Decoder decoder = Base64.getUrlDecoder();
-
-        JSONParser jsonParser = new JSONParser();
-        JSONObject object = null;
-        try {
-            object = (JSONObject) jsonParser.parse(decoder.decode(chunks[1]));
-        } catch (ParseException e) {
-            throw new RuntimeException(e);
-        }
-        return userRepository.findByEmail(String.valueOf(object.get("sub"))).orElseThrow(() -> new RuntimeException("user can be null"));
+        String username = jwtService.extractUsername(token);
+        return userRepository.findByEmail(username)
+                .orElseThrow(() -> new RuntimeException("User not found from token."));
     }
 
     @Override
     public void deleteById(Long id) {
         if (userRepository.findById(id).isEmpty())
-            throw new NotFoundException("user not found with id:"+id+"!", HttpStatus.BAD_REQUEST);
+            throw new NotFoundException("user not found with id:" + id + "!", HttpStatus.BAD_REQUEST);
         userRepository.deleteById(id);
     }
 
@@ -71,16 +60,73 @@ public class UserServiceImpl implements UserService {
     public void updateById(Long id, UserRequest userRequest) {
         Optional<User> user = userRepository.findById(id);
         if (user.isEmpty())
-            throw new NotFoundException("user not found with id:"+id+"!", HttpStatus.BAD_REQUEST);
+            throw new NotFoundException("user not found with id:" + id + "!", HttpStatus.BAD_REQUEST);
 
-
+        // Update the user data as needed, for example, updating the password
+        user.get().setPassword(passwordEncoder.encode(userRequest.getPassword()));
         userRepository.save(user.get());
     }
-
 
     @Override
     public List<UserResponse> getAll() {
         return userMapper.toDtoS(userRepository.findAll());
     }
 
+    @Override
+    public UserAuthResponse register(UserAuthRequest userAuthRequest) {
+        // Check if the email already exists
+        if (userRepository.existsByEmail(userAuthRequest.getEmail())) {
+            throw new BadRequestException(HttpStatus.BAD_REQUEST, "Email is already in use.");
+        }
+
+        // Create a new User entity
+        User user = new User();
+        user.setEmail(userAuthRequest.getEmail());
+        user.setPassword(passwordEncoder.encode(userAuthRequest.getPassword())); // Encrypt the password
+        user.setRole(Role.valueOf(userAuthRequest.getRole())); // Set the role from the request
+
+        // Save user to the repository
+        userRepository.save(user);
+
+        // Generate JWT tokens
+        String token = jwtService.generateToken(user);
+        String refreshToken = jwtService.generateRefreshToken(user);
+
+        // Return response with the tokens
+        UserAuthResponse response = new UserAuthResponse();
+        response.setEmail(user.getEmail());
+        response.setRole(user.getRole().name());
+        response.setToken(token);
+        response.setRefreshToken(refreshToken);
+
+        return response;
+    }
+
+    @Override
+    public UserAuthResponse login(UserAuthRequest userAuthRequest) {
+        // Authenticate user with the AuthenticationManager
+        authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(
+                        userAuthRequest.getEmail(),
+                        userAuthRequest.getPassword()
+                )
+        );
+
+        // Find the user by email
+        User user = userRepository.findByEmail(userAuthRequest.getEmail())
+                .orElseThrow(() -> new BadRequestException(HttpStatus.BAD_REQUEST, "Invalid credentials."));
+
+        // Generate JWT tokens
+        String token = jwtService.generateToken(user);
+        String refreshToken = jwtService.generateRefreshToken(user);
+
+        // Return response with the tokens
+        UserAuthResponse response = new UserAuthResponse();
+        response.setEmail(user.getEmail());
+        response.setRole(user.getRole().name());
+        response.setToken(token);
+        response.setRefreshToken(refreshToken);
+
+        return response;
+    }
 }
