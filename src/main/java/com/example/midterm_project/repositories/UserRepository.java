@@ -7,7 +7,15 @@ import java.util.Optional;
 
 public interface UserRepository extends JpaRepository<User, Long> {
 
-    Optional<User> findByEmail(String email); // Already exists
+    // Find user by email
+    Optional<User> findByEmail(String email);
 
-    boolean existsByEmail(String email); // New method to check if the email is already taken
+    // Check if the email is already taken
+    boolean existsByEmail(String email);
+
+    // Find user by email verification token (used for 2FA)
+    Optional<User> findByTwoFactorSecret(String token);
+
+    // Find user by the verification token (optional based on your naming convention)
+    Optional<User> findByVerificationToken(String token);
 }

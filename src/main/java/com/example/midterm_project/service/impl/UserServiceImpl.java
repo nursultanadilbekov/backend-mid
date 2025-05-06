@@ -12,7 +12,8 @@ import com.example.midterm_project.exception.NotFoundException;
 import com.example.midterm_project.mapper.interfaces.UserMapper;
 import com.example.midterm_project.repositories.UserRepository;
 import com.example.midterm_project.service.interfaces.UserService;
-
+import com.example.midterm_project.service.interfaces.MailService;
+import jakarta.mail.MessagingException;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -22,6 +23,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 @Service
 @AllArgsConstructor
@@ -31,6 +33,7 @@ public class UserServiceImpl implements UserService {
     private final PasswordEncoder passwordEncoder;
     private final AuthenticationManager authenticationManager;
     private final JwtService jwtService;
+    private final MailService mailService;
 
     @Override
     public UserResponse getById(Long id, String token) {
@@ -43,7 +46,6 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public User getUsernameFromToken(String token) {
-        String[] chunks = token.substring(7).split("\\.");
         String username = jwtService.extractUsername(token);
         return userRepository.findByEmail(username)
                 .orElseThrow(() -> new RuntimeException("User not found from token."));
@@ -84,9 +86,23 @@ public class UserServiceImpl implements UserService {
         user.setEmail(userAuthRequest.getEmail());
         user.setPassword(passwordEncoder.encode(userAuthRequest.getPassword())); // Encrypt the password
         user.setRole(Role.valueOf(userAuthRequest.getRole())); // Set the role from the request
+        user.setEmailVerified(false); // Mark the user as not verified yet
 
         // Save user to the repository
         userRepository.save(user);
+
+        // Generate a verification token
+        String verificationToken = UUID.randomUUID().toString(); // Random token
+        user.setTwoFactorSecret(verificationToken);
+        userRepository.save(user);
+
+        // Send email verification link
+        String verificationLink = "http://localhost:8080/user/verify-email?token=" + verificationToken;
+        try {
+            mailService.sendVerificationEmail(user.getEmail(), verificationLink);
+        } catch (MessagingException e) {
+            throw new RuntimeException(e);
+        }
 
         // Generate JWT tokens
         String token = jwtService.generateToken(user);
@@ -116,6 +132,11 @@ public class UserServiceImpl implements UserService {
         User user = userRepository.findByEmail(userAuthRequest.getEmail())
                 .orElseThrow(() -> new BadRequestException(HttpStatus.BAD_REQUEST, "Invalid credentials."));
 
+        // Check if email is verified
+        if (!user.isEmailVerified()) {
+            throw new BadRequestException(HttpStatus.BAD_REQUEST, "Email is not verified.");
+        }
+
         // Generate JWT tokens
         String token = jwtService.generateToken(user);
         String refreshToken = jwtService.generateRefreshToken(user);
@@ -128,5 +149,34 @@ public class UserServiceImpl implements UserService {
         response.setRefreshToken(refreshToken);
 
         return response;
+    }
+
+    @Override
+    public void sendNewVerificationEmail(String email) throws MessagingException {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new NotFoundException("User not found.", HttpStatus.BAD_REQUEST));
+
+        if (user.isEmailVerified()) {
+            throw new BadRequestException(HttpStatus.BAD_REQUEST, "Email is already verified.");
+        }
+
+        // Generate a new verification token
+        String verificationToken = UUID.randomUUID().toString();
+        user.setTwoFactorSecret(verificationToken);
+        userRepository.save(user);
+
+        // Send a new verification email
+        String verificationLink = "http://localhost:8080/user/verify-email?token=" + verificationToken;
+        mailService.sendVerificationEmail(user.getEmail(), verificationLink);
+    }
+
+    @Override
+    public void verifyEmailToken(String token) {
+        User user = userRepository.findByTwoFactorSecret(token)
+                .orElseThrow(() -> new BadRequestException(HttpStatus.BAD_REQUEST, "Invalid or expired token."));
+
+        user.setEmailVerified(true);
+        user.setTwoFactorSecret(null); // Clear the verification token
+        userRepository.save(user);
     }
 }

@@ -27,14 +27,20 @@ public class SecurityConfig {
                         "/auth/register",
                         "/auth/login",
                         "/auth/refresh",
+                        "/user/register",
+                        "/user/verify-email",                     // <-- If using a different endpoint, adjust accordingly
+                        "/user/request-new-verification",         // <-- OPTIONAL, if you're using it
                         "/v3/api-docs/**",
                         "/swagger-ui/**",
-                        "/swagger-ui.html"
+                        "/swagger-ui.html",
+                        "/api/v1/auth/verify"                     // <-- ADDED: Permit email verification endpoint
                 ).permitAll()
                 .anyRequest().authenticated()
                 .and()
-                .addFilterBefore(new JwtAuthenticationFilter(jwtService, customUserDetailsService),
-                        UsernamePasswordAuthenticationFilter.class);
+                .addFilterBefore(
+                        new JwtAuthenticationFilter(jwtService, customUserDetailsService),
+                        UsernamePasswordAuthenticationFilter.class
+                );
 
         return http.build();
     }

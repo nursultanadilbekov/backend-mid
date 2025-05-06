@@ -12,20 +12,23 @@ import com.example.midterm_project.exception.BadRequestException;
 import com.example.midterm_project.repositories.CustomerRepository;
 import com.example.midterm_project.repositories.RepairerRepository;
 import com.example.midterm_project.repositories.UserRepository;
+import com.example.midterm_project.service.interfaces.MailService;
 import com.example.midterm_project.service.interfaces.AuthenticateService;
+import jakarta.mail.MessagingException;
 import lombok.AllArgsConstructor;
 import net.minidev.json.JSONObject;
 import net.minidev.json.parser.JSONParser;
+import net.minidev.json.parser.ParseException;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.Base64;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Optional;
-import net.minidev.json.parser.ParseException;
+import java.util.UUID;
 
 @Service
 @AllArgsConstructor
@@ -36,40 +39,54 @@ public class AuthenticateServiceImpl implements AuthenticateService {
     private final AuthenticationManager authenticationManager;
     private final JwtService jwtService;
     private final RepairerRepository repairerRepository;
+    private final MailService emailService;
+
     @Override
     public void register(UserAuthRequest userAuthRequest) {
         if (userRepository.findByEmail(userAuthRequest.getEmail()).isPresent())
-            throw new BadRequestException("user with this email is already exist!: "+userAuthRequest.getEmail());
+            throw new BadRequestException("user with this email is already exist!: " + userAuthRequest.getEmail());
+
         User user = new User();
         user.setRole(Role.valueOf(userAuthRequest.getRole()));
         user.setEmail(userAuthRequest.getEmail());
+        user.setName(userAuthRequest.getName());
         user.setPassword(passwordEncoder.encode(userAuthRequest.getPassword()));
 
+        String verificationToken = UUID.randomUUID().toString();
+        user.setVerificationToken(verificationToken);
+        user.setVerificationTokenExpiration(LocalDateTime.now().plusHours(1));
 
-        if (userAuthRequest.getRole().equals(Role.REPAIRER)){
-
+        if (user.getRole() == Role.REPAIRER) {
             Repairer repairer = new Repairer();
             repairer.setName(user.getName());
             repairerRepository.save(repairer);
-
             user.setRepairer(repairer);
-            userRepository.save(user);
-
         }
 
-        if(userAuthRequest.getRole().equals(Role.CUSTOMER)){
+        if (user.getRole() == Role.CUSTOMER) {
             Customer customer = new Customer();
             customer.setName(user.getName());
             customerRepository.save(customer);
-
             user.setCustomer(customer);
         }
 
         userRepository.save(user);
+        try {
+            emailService.sendVerificationEmail(user.getEmail(), verificationToken);
+        } catch (MessagingException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     @Override
     public UserAuthResponse login(UserAuthRequest userAuthRequest) {
+        User user = userRepository.findByEmail(userAuthRequest.getEmail())
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        if (!user.isEmailVerified()) {
+            throw new BadRequestException("Please verify your email address.");
+        }
+
         try {
             authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(
@@ -77,24 +94,11 @@ public class AuthenticateServiceImpl implements AuthenticateService {
                             userAuthRequest.getPassword()
                     )
             );
-        } catch (BadCredentialsException e) {
+        } catch (org.springframework.security.authentication.BadCredentialsException e) {
             throw new BadCredentialsException("Invalid credentials provided.");
         }
 
-        User user = userRepository.findByEmail(userAuthRequest.getEmail())
-                .orElseThrow(() -> new RuntimeException("User not found"));
-
-        Map<String, Object> extraClaims = new HashMap<>();
-        String accessToken = jwtService.generateToken(extraClaims, user);
-        String refreshToken = jwtService.generateRefreshToken(user);
-
-        UserAuthResponse response = new UserAuthResponse();
-        response.setToken(accessToken);
-        response.setRefreshToken(refreshToken);
-        response.setEmail(user.getEmail());
-        response.setRole(user.getRole().name());
-
-        return response;
+        return convertToAuthResponse(user);
     }
 
     @Override
@@ -107,28 +111,16 @@ public class AuthenticateServiceImpl implements AuthenticateService {
             throw new RuntimeException("Refresh token is invalid or expired.");
         }
 
-        Map<String, Object> extraClaims = new HashMap<>();
-        String newAccessToken = jwtService.generateToken(extraClaims, user);
-        String newRefreshToken = jwtService.generateRefreshToken(user);
-
-        UserAuthResponse response = new UserAuthResponse();
-        response.setToken(newAccessToken);
-        response.setRefreshToken(newRefreshToken);
-        response.setEmail(user.getEmail());
-        response.setRole(user.getRole().name());
-
-        return response;
+        return convertToAuthResponse(user);
     }
 
-
     @Override
-    public User getUsernameFromToken(String token){
-
+    public User getUsernameFromToken(String token) {
         String[] chunks = token.substring(7).split("\\.");
         Base64.Decoder decoder = Base64.getUrlDecoder();
 
         JSONParser jsonParser = new JSONParser();
-        JSONObject object = null;
+        JSONObject object;
         try {
             object = (JSONObject) jsonParser.parse(decoder.decode(chunks[1]));
         } catch (ParseException e) {
@@ -144,10 +136,10 @@ public class AuthenticateServiceImpl implements AuthenticateService {
 
         Map<String, Object> extraClaims = new HashMap<>();
         String accessToken = jwtService.generateToken(extraClaims, user);
-        String refreshToken = jwtService.generateRefreshToken(user);  // Add refresh token
+        String refreshToken = jwtService.generateRefreshToken(user);
 
         userAuthResponse.setToken(accessToken);
-        userAuthResponse.setRefreshToken(refreshToken);  // Set refresh token
+        userAuthResponse.setRefreshToken(refreshToken);
         return userAuthResponse;
     }
 }

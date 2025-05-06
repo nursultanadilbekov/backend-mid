@@ -15,7 +15,6 @@ public class UserMapperImpl implements UserMapper {
     public UserResponse toDto(User user) {
         UserResponse userResponse = new UserResponse();
         userResponse.setId(user.getId());
-        userResponse.setAge(user.getAge());
         userResponse.setName(user.getName());
         return userResponse;
     }

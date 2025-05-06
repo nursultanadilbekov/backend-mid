@@ -5,6 +5,7 @@ import com.example.midterm_project.dto.user.UserAuthResponse;
 import com.example.midterm_project.dto.user.UserRequest;
 import com.example.midterm_project.dto.user.UserResponse;
 import com.example.midterm_project.entities.User;
+import jakarta.mail.MessagingException;
 
 import java.util.List;
 
@@ -30,4 +31,8 @@ public interface UserService {
 
     // Authenticate user (login) and return authentication response with tokens
     UserAuthResponse login(UserAuthRequest userAuthRequest);
+
+    void sendNewVerificationEmail(String email) throws MessagingException;
+
+    void verifyEmailToken(String token);
 }

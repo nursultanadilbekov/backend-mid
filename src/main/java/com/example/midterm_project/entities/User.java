@@ -8,6 +8,7 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
+import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.Collections;
 
@@ -23,7 +24,6 @@ public class User implements UserDetails {
 
     private String email;
     private String name;
-    private Integer age;
     private String password;
 
     @Enumerated(EnumType.STRING)
@@ -36,8 +36,12 @@ public class User implements UserDetails {
     private Customer customer;
 
     private boolean emailVerified = false;
+
     private boolean twoFactorEnabled = false;
     private String twoFactorSecret;
+
+    private String verificationToken;
+    private LocalDateTime verificationTokenExpiration;
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
